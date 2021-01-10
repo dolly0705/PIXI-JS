@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixi js</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.3.7/pixi.min.js"
+    integrity="sha512-k8E2ILMRTO1YBnA2dvTDfsZs7f07gazZDQYbsv2NCxnM9hYFwCKu+rWISm8/fFB1I/gi0tgnURcXJVR7GlE0BA=="
+    crossorigin="anonymous"></script>
+  <style>
+    * {
+      padding: 0;
+      margin: 0
+    }
+  </style>
+</head>
+
+<body>
+
+  <script>
+
+    //Aliases
+    // 將 PIXI 的功能用變數存起來，方便寫程式簡潔
+    let Application = PIXI.Application,
+      Container = PIXI.Container,
+      loader = PIXI.loader,
+      resources = PIXI.loader.resources,
+      TextureCache = PIXI.utils.TextureCache,
+      Sprite = PIXI.Sprite,
+      Text = PIXI.Text,
+      TextStyle = PIXI.TextStyle;
+
+    //Create a Pixi Application
+    let app = new Application({
+      width: 600,
+      height: 600,
+      antialiasing: true,
+      transparent: false,
+      resolution: 1
+    }
+    );
+
+    document.body.appendChild(app.view);
+
+    loader
+      .add(["student.png", "earth.png", "fish.png"])
+      .load(setup);
+
+    //Define any variables that are used in more than one function
+    var student, state, gameScene, gameOverScene, message;
+
+    function setup() {
+      // 將遊戲場景加到 stage
+      gameScene = new Container();
+      app.stage.addChild(gameScene);
+
+      // 將遊戲場景裡要用的東西加進去
+      earth = new Sprite(resources["earth.png"].texture);
+      gameScene.addChild(earth);
+      earth.y = 250;
+      earth.x = 450;
+      earth.scale.set(0.1, 0.1);
+
+      //Create the `student` sprite 
+      student = new Sprite(resources["student.png"].texture);
+      student.y = 50;
+      student.vx = 0;
+      student.vy = 0;
+      gameScene.addChild(student);
+      student.scale.set(0.15, 0.15);
+
+      // 將遊戲結束場景加到 stage
+      gameOverScene = new Container();
+      app.stage.addChild(gameOverScene);
+
+      // 先將遊戲結束場景隱藏
+      gameOverScene.visible = false;
+
+      // 設置文字樣式
+      let style = new TextStyle({
+        fontFamily: "Futura",
+        fontSize: 64,
+        fill: "white"
+      });
+
+      // 將遊戲結束場景要用的東西加進去
+      message = new Text("The End!", style);
+      message.x = 120;
+      message.y = app.stage.height / 2 - 32;
+      gameOverScene.addChild(message);
+
+      // 設置移動：上下左右
+      //Capture the keyboard arrow keys
+      let left = keyboard(37),
+        up = keyboard(38),
+        right = keyboard(39),
+        down = keyboard(40);
+
+      //Left arrow key `press` method
+      left.press = () => {
+        //Change the student's velocity when the key is pressed
+        student.vx = -5;
+        student.vy = 0;
+      };
+
+      //Left arrow key `release` method
+      left.release = () => {
+        //If the left arrow has been released, and the right arrow isn't down,
+        //and the student isn't moving vertically:
+        //Stop the student
+        if (!right.isDown && student.vy === 0) {//?????
+          student.vx = 0;
+        }
+      };
+
+      //Up
+      up.press = () => {
+        student.vy = -5;
+        student.vx = 0;
+      };
+      up.release = () => {
+        if (!down.isDown && student.vx === 0) {
+          student.vy = 0;
+        }
+      };
+
+      //Right
+      right.press = () => {
+        student.vx = 5;
+        student.vy = 0;
+      };
+      right.release = () => {
+        if (!left.isDown && student.vy === 0) {
+          student.vx = 0;
+        }
+      };
+
+      //Down
+      down.press = () => {
+        student.vy = 5;
+        student.vx = 0;
+      };
+      down.release = () => {
+        if (!up.isDown && student.vx === 0) {
+          student.vy = 0;
+        }
+      };
+
+
+      //Set the game state
+      state = play;
+
+      //Start the game loop 
+      // 第一種
+      app.ticker.add(delta => play(delta)); //delta 每一幀的變化動作
+
+      // 第二種
+      // app.ticker.add(function(){
+      //   student.x += student.vx;
+      //   student.y += student.vy;
+      // })
+
+      // 第三種
+      // app.ticker.add(test);
+    }
+
+
+    // function test(){
+    //   student.x += student.vx;
+    //   student.y += student.vy;
+    // }
+
+ 
+    function play(delta) {
+
+      //Use the student's velocity to make it move
+      student.x += student.vx;
+      student.y += student.vy;
+
+
+      contain(student, { x: 0, y:0, width: 600, height: 600 });
+
+      if (hitTestRectangle(student, earth)) {
+        console.log("yes");
+        end();
+      }
+      else {
+        console.log("no");
+      }
+
+    }
+
+    function contain(student, container) {
+
+      let collision = undefined;
+
+      //Left
+      if (student.x < container.x) {
+        student.x = container.x;
+        collision = "left";
+      }
+
+      //Top
+      if (student.y < container.y) {
+        student.y = container.y;
+        collision = "top";
+      }
+
+      //Right
+      if (student.x + student.width > container.width) {
+        student.x = container.width - student.width;
+        collision = "right";
+      }
+
+      //Bottom
+      if (student.y + student.height > container.height) {
+        student.y = container.height - student.height;
+        collision = "bottom";
+      }
+
+      //Return the `collision` value
+      return collision;
+    }
+
+    function end() {
+      gameScene.visible = false;
+      gameOverScene.visible = true;
+    }
+
+    //The `keyboard` helper function
+    function keyboard(keyCode) {
+      var key = {};
+      key.code = keyCode;
+      key.isDown = false;
+      key.isUp = true;
+      key.press = undefined;
+      key.release = undefined;
+      //The `downHandler`
+      key.downHandler = event => {
+        if (event.keyCode === key.code) {
+          if (key.isUp && key.press) key.press();
+          key.isDown = true;
+          key.isUp = false;
+        }
+        event.preventDefault();
+      };
+
+      //The `upHandler`
+      key.upHandler = event => {
+        if (event.keyCode === key.code) {
+          if (key.isDown && key.release) key.release();
+          key.isDown = false;
+          key.isUp = true;
+        }
+        event.preventDefault();
+      };
+
+      //Attach event listeners
+      window.addEventListener(
+        "keydown", key.downHandler.bind(key), false
+      );
+      window.addEventListener(
+        "keyup", key.upHandler.bind(key), false
+      );
+      return key;
+    }
+
+
+    function hitTestRectangle(student, earth) {
+
+      //Define the variables we'll need to calculate
+      let hit, combinedHalfWidths, combinedHalfHeights, vx, vy;
+
+      //hit will determine whether there's a collision
+      hit = false;
+
+      //找出每個sprite的中心點
+      student.centerX = student.x + student.width / 2;
+      student.centerY = student.y + student.height / 2;
+      earth.centerX = earth.x + earth.width / 2;
+      earth.centerY = earth.y + earth.height / 2;
+
+      //找出每個sprite的半高 半寬
+      student.halfWidth = student.width / 2;
+      student.halfHeight = student.height / 2;
+      earth.halfWidth = earth.width / 2;
+      earth.halfHeight = earth.height / 2;
+
+      //sprite之間的距離
+      vx = student.centerX - earth.centerX;
+      vy = student.centerY - earth.centerY;
+
+      //兩物件的半徑相加
+      combinedHalfWidths = student.halfWidth + earth.halfWidth;
+      combinedHalfHeights = student.halfHeight + earth.halfHeight;
+
+      //檢查x軸上是否有碰撞
+      if (Math.abs(vx) < combinedHalfWidths) {
+
+        //檢查y軸上是否有碰撞
+        if (Math.abs(vy) < combinedHalfHeights) {
+
+
+          hit = true;
+        } else {
+
+          hit = false;
+        }
+      } else {
+
+
+        hit = false;
+      }
+
+      //hit可以是true或false
+      return hit;
+    };
+  </script>
+</body>

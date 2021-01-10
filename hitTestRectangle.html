@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixi js</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.3.7/pixi.min.js"
+        integrity="sha512-k8E2ILMRTO1YBnA2dvTDfsZs7f07gazZDQYbsv2NCxnM9hYFwCKu+rWISm8/fFB1I/gi0tgnURcXJVR7GlE0BA=="
+        crossorigin="anonymous"></script>
+    <style>
+        * {
+            padding: 0;
+            margin: 0
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <script type="text/javascript">
+        let type = "WebGL"//渲染引擎預設WebGL 
+        if (!PIXI.utils.isWebGLSupported()) {//isWebGLSupported用於檢查WebGL支持的幫助程序
+            type = "canvas"//但不識所有瀏覽器都支援WebGL，如果不支援WebGL，就變成canvas
+        }
+
+        PIXI.utils.sayHello(type) //然後指定渲染引擎type=WebGL or canvas
+        //utils實用程序
+
+        let app = new PIXI.Application({//創建顯示區
+            width: 800,
+            height: 800,
+            antialias: true,    // 設置抗鋸齒
+            transparent: false, // 透明
+            resolution: 1,      // 解析度
+
+        });
+        document.body.appendChild(app.view);//app顯示在body中
+
+
+
+
+        app.renderer.view.style.position = "absolute";
+        app.renderer.view.style.display = "block";
+        app.renderer.autoResize = true;
+        app.renderer.resize(window.innerWidth, window.innerHeight);
+        //以上四行canvas占据整个窗口，要记得把css padding和margin都设置成0：
+
+
+
+        PIXI.loader
+            .add(["animals.json"]) //載入圖片
+
+            .load(loadover); //執行loadover function
+
+
+
+        function loadover() {
+            let resources = PIXI.loader.resources;
+            let id = PIXI.loader.resources["animals.json"].textures;
+            let cat = new PIXI.Sprite(id['cat.png']);
+            let hedgehog = new PIXI.Sprite(id['hedgehog.png']);
+            let tiger = new PIXI.Sprite(id['tiger.png']);
+
+            app.ticker.add(delta => {//ticker 1秒更新60次(遊戲循環)
+
+
+                if (hitTestRectangle(cat, rectangle)) {
+                    console.log("碰到了")
+                    rectangle.visible = false;
+
+                } else {
+                    cat.x += 0.5
+                    cat.y += 0.5
+
+                }
+
+            });
+
+            /////////////////////繪製圖型////////////////////
+            let rectangle = new PIXI.Graphics();
+            rectangle.lineStyle(4, 0xFF3300, 1);
+            rectangle.beginFill(0x66CCFF);
+            rectangle.drawRect(0, 0, 64, 64);
+            rectangle.endFill();
+            rectangle.x = 170;
+            rectangle.y = 170;
+            app.stage.addChild(rectangle);
+
+            app.stage.addChild(cat);
+
+
+
+        }
+
+        function hitTestRectangle(r1, r2) { 
+ 
+            //Define the variables we'll need to calculate
+            let hit, combinedHalfWidths, combinedHalfHeights, vx, vy;
+
+            //hit will determine whether there's a collision
+            hit = false;
+
+            //Find the center points of each sprite
+            r1.centerX = r1.x + r1.width / 2;
+            r1.centerY = r1.y + r1.height / 2;
+            r2.centerX = r2.x + r2.width / 2;
+            r2.centerY = r2.y + r2.height / 2;
+
+            //Find the half-widths and half-heights of each sprite
+            r1.halfWidth = r1.width / 2;
+            r1.halfHeight = r1.height / 2;
+            r2.halfWidth = r2.width / 2;
+            r2.halfHeight = r2.height / 2;
+
+            //Calculate the distance vector between the sprites
+            vx = r1.centerX - r2.centerX;
+            vy = r1.centerY - r2.centerY;
+
+            //Figure out the combined half-widths and half-heights
+            combinedHalfWidths = r1.halfWidth + r2.halfWidth;
+            combinedHalfHeights = r1.halfHeight + r2.halfHeight;
+
+            //Check for a collision on the x axis
+            if (Math.abs(vx) < combinedHalfWidths) {
+
+                //A collision might be occuring. Check for a collision on the y axis
+                if (Math.abs(vy) < combinedHalfHeights) {
+
+                    //There's definitely a collision happening
+                    hit = true;
+                } else {
+
+                    //There's no collision on the y axis
+                    hit = false;
+                }
+            } else {
+
+                //There's no collision on the x axis
+                hit = false;
+            }
+
+            //`hit` will be either `true` or `false`
+            return hit;
+        };
+    </script>
+</body>
+
+</html>

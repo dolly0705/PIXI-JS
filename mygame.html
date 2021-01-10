@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixi js</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.3.7/pixi.min.js"
+        integrity="sha512-k8E2ILMRTO1YBnA2dvTDfsZs7f07gazZDQYbsv2NCxnM9hYFwCKu+rWISm8/fFB1I/gi0tgnURcXJVR7GlE0BA=="
+        crossorigin="anonymous"></script>
+    <style>
+        * {
+            padding: 0;
+            margin: 0
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <script>
+        let type = "WebGL"//渲染引擎預設WebGL 
+        if (!PIXI.utils.isWebGLSupported()) {//isWebGLSupported用於檢查WebGL支持的幫助程序
+            type = "canvas"//但不是所有瀏覽器都支援WebGL，如果不支援WebGL，就變成canvas
+        }
+
+        PIXI.utils.sayHello(type) //然後指定渲染引擎type=WebGL or canvas
+        //utils實用程序
+
+        let Application = PIXI.Application,//創建新的PIXI應用程序
+            Container = PIXI.Container,     //容器
+            loader = PIXI.loader,           //加载資源
+            resources = PIXI.loader.resources,//資源
+            TextureCache = PIXI.utils.TextureCache,//别名
+            Sprite = PIXI.Sprite, //造型
+            Text = PIXI.Text,
+            TextStyle = PIXI.TextStyle; //文字
+
+        let app = new Application({
+            width: 600,
+            height: 600,
+            antialias: true, //使得字体的边界和几何图形更加圆滑
+            transparent: false,//透明度
+            resolution: 1
+        });
+
+
+        document.body.appendChild(app.view); //顯示app
+
+        loader
+            .add(["student.png", "earth.png", "fish.png"])
+            .load(setup);
+
+        var UFO, state, gameScene, gameOverScene, message;
+
+        function setup() {
+            // 將遊戲場景加到 stage
+            gameScene = new Container();
+            app.stage.addChild(gameScene);
+
+
+            // 將遊戲結束場景加到 stage
+            gameOverScene = new Container();
+            app.stage.addChild(gameOverScene);
+            // 先將遊戲結束場景隱藏
+            gameOverScene.visible = false;
+            // 設置文字樣式
+            let style = new TextStyle({
+                fontFamily: "Futura",
+                fontSize: 64,
+                fill: "white"
+            })
+            // 將遊戲結束場景要用的東西加進去
+            message = new Text("The End!", style);
+            message.x =180;
+            message.y = 250;
+            gameOverScene.addChild(message);
+
+
+
+            earth = new Sprite(resources["earth.png"].texture);
+            gameScene.addChild(earth);
+            earth.y = 250;
+            earth.x = 450;
+            earth.scale.set(0.1, 0.1);
+
+            UFO = new Sprite(resources["student.png"].texture);
+            gameScene.addChild(UFO);
+            UFO.y = 50;
+            UFO.vx = 0;
+            UFO.vy = 0;
+            UFO.scale.set(0.15, 0.15);
+
+            //宣告鍵盤
+            // 設置移動：上下左右
+            let left = keyboard(37),
+                up = keyboard(38),
+                right = keyboard(39),
+                down = keyboard(40);
+
+            left.press = () => {
+                UFO.vx = -5;
+                UFO.vy = 0;
+            };
+            left.release = () => {
+                if (!right.isDown && UFO.vy === 0) {
+                    UFO.vx = 0;
+                }
+            }
+
+            up.press = () => {
+                UFO.vy = -5;
+                UFO.vx = 0;
+            };
+            up.release = () => {
+                if (!down.isDown && UFO.vx === 0) {
+                    UFO.vy = 0;
+                }
+            };
+
+
+            right.press = () => {
+                UFO.vx = 5;
+                UFO.vy = 0;
+            };
+            right.release = () => {
+                if (!left.isDown && UFO.vy === 0) {
+                    UFO.vx = 0;
+                }
+            };
+
+            down.press = () => {
+                UFO.vy = 5;
+                UFO.vx = 0;
+            };
+            down.release = () => {
+                if (!up.isDown && UFO.vx === 0) {
+                    UFO.vy = 0;
+                }
+            };
+
+
+            state = play;
+
+            app.ticker.add(delta => play(delta));//delta 每一幀的變化動作
+
+        }
+
+        function play(delta) {
+            UFO.x += UFO.vx;
+            UFO.y += UFO.vy;
+
+            contain(UFO, { x: 0, y: 0, width: 600, height: 600 });
+
+            if (hitTestRectangle(UFO, earth)) {
+
+                end();
+            }
+
+        }
+
+
+        function contain(UFO, container) { //不超出邊界
+
+
+            //Left
+            if (UFO.x < container.x) {
+                UFO.x = container.x;
+            }
+
+            //Top
+            if (UFO.y < container.y) {
+                UFO.y = container.y;
+            }
+
+            //Right
+            if (UFO.x + UFO.width > container.width) {
+                UFO.x = container.width - UFO.width;
+            }
+
+            //Bottom
+            if (UFO.y + UFO.height > container.height) {
+                UFO.y = container.height - UFO.height;
+            }
+
+        }
+
+        function end(){
+            gameScene.visible = false;
+            gameOverScene.visible = true;
+        }
+
+        function keyboard(keyCode) {
+      var key = {};
+      key.code = keyCode;
+      key.isDown = false;
+      key.isUp = true;
+      key.press = undefined;
+      key.release = undefined;
+      //The `downHandler`
+      key.downHandler = event => {
+        if (event.keyCode === key.code) {
+          if (key.isUp && key.press) key.press();
+          key.isDown = true;
+          key.isUp = false;
+        }
+        event.preventDefault();
+      };
+
+      //The `upHandler`
+      key.upHandler = event => {
+        if (event.keyCode === key.code) {
+          if (key.isDown && key.release) key.release();
+          key.isDown = false;
+          key.isUp = true;
+        }
+        event.preventDefault();
+      };
+
+      //Attach event listeners
+      window.addEventListener(
+        "keydown", key.downHandler.bind(key), false
+      );
+      window.addEventListener(
+        "keyup", key.upHandler.bind(key), false
+      );
+      return key;
+    }
+
+
+    function hitTestRectangle(UFO, earth) {
+
+      //Define the variables we'll need to calculate
+      let hit, combinedHalfWidths, combinedHalfHeights, vx, vy;
+
+      //hit will determine whether there's a collision
+      hit = false;
+
+      //找出每個sprite的中心點
+      UFO.centerX = UFO.x + UFO.width / 2;
+      UFO.centerY = UFO.y + UFO.height / 2;
+      earth.centerX = earth.x + earth.width / 2;
+      earth.centerY = earth.y + earth.height / 2;
+
+      //找出每個sprite的半高 半寬
+      UFO.halfWidth = UFO.width / 2;
+      UFO.halfHeight = UFO.height / 2;
+      earth.halfWidth = earth.width / 2;
+      earth.halfHeight = earth.height / 2;
+
+      //sprite之間的距離
+      vx = UFO.centerX - earth.centerX;
+      vy = UFO.centerY - earth.centerY;
+
+      //兩物件的半徑相加
+      combinedHalfWidths = UFO.halfWidth + earth.halfWidth;
+      combinedHalfHeights = UFO.halfHeight + earth.halfHeight;
+
+      //檢查x軸上是否有碰撞
+      if (Math.abs(vx) < combinedHalfWidths) {
+
+        //檢查y軸上是否有碰撞
+        if (Math.abs(vy) < combinedHalfHeights) {
+
+
+          hit = true;
+        } else {
+
+          hit = false;
+        }
+      } else {
+
+
+        hit = false;
+      }
+
+      //hit可以是true或false
+      return hit;
+    };
+    </script>
+</body>
+
+</html>

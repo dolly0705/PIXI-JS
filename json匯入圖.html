@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixi js</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.3.7/pixi.min.js"
+        integrity="sha512-k8E2ILMRTO1YBnA2dvTDfsZs7f07gazZDQYbsv2NCxnM9hYFwCKu+rWISm8/fFB1I/gi0tgnURcXJVR7GlE0BA=="
+        crossorigin="anonymous"></script>
+    <style>
+        * {
+            padding: 0;
+            margin: 0
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <script type="text/javascript">
+        let type = "WebGL"//渲染引擎預設WebGL 
+        if (!PIXI.utils.isWebGLSupported()) {//isWebGLSupported用於檢查WebGL支持的幫助程序
+            type = "canvas"//但不識所有瀏覽器都支援WebGL，如果不支援WebGL，就變成canvas
+        }
+
+        PIXI.utils.sayHello(type) //然後指定渲染引擎type=WebGL or canvas
+        //utils實用程序
+
+        let app = new PIXI.Application({//創建顯示區
+            width: 800,
+            height: 800,
+            antialias: true,    // 設置抗鋸齒
+            transparent: false, // 透明
+            resolution: 1,      // 解析度
+
+        });
+        document.body.appendChild(app.view);//app顯示在body中
+
+
+
+
+        app.renderer.view.style.position = "absolute";
+        app.renderer.view.style.display = "block";
+        app.renderer.autoResize = true;
+        app.renderer.resize(window.innerWidth, window.innerHeight);
+        //以上四行canvas占据整个窗口，要记得把css padding和margin都设置成0：
+
+
+
+        PIXI.loader
+            .add(["animals.json"]) //載入圖片
+            // .on("progress", loadProgressHandler)
+            .load(loadover); //執行loadover function
+
+
+        // function loadProgressHandler(loader, resource) {
+        //     console.log("loading: " + resource.url);
+        //     console.log("progress: " + loader.progress + "%");
+        // }
+
+
+        function loadover() {
+            let resources = PIXI.loader.resources;
+            let id = PIXI.loader.resources["animals.json"].textures;
+            let cat = new PIXI.Sprite(id['cat.png']);
+            let hedgehog = new PIXI.Sprite(id['hedgehog.png']);
+            let tiger = new PIXI.Sprite(id['tiger.png']);
+            let animals = new PIXI.Container();
+            animals.addChild(cat)
+            animals.addChild(hedgehog)
+            animals.addChild(tiger)
+            hedgehog.x = 32;
+            hedgehog.y = 32;
+            tiger.x = 64;
+            tiger.y = 64;
+
+            console.log(animals.toGlobal(hedgehog.position));
+            //toGlobal找到Container裡的hedgehog相對應的的全局位置
+            console.log(tiger.getGlobalPosition().x)
+            //第二種抓位置的方式
+            console.log(cat.parent.toGlobal(cat.position))
+            //第三種抓位置的方式,parent上層的意思
+
+
+            app.stage.addChild(animals);
+            app.ticker.add(delta => {//ticker 1秒更新60次(遊戲循環)
+                animals.x += 0.5
+                animals.y += 0.5
+            });
+
+
+            /////////////////////繪製圖型////////////////////
+            let rectangle = new PIXI.Graphics();
+            rectangle.lineStyle(4, 0xFF3300, 1);
+            rectangle.beginFill(0x66CCFF);
+            rectangle.drawRect(0, 0, 64, 64);
+            rectangle.endFill();
+            rectangle.x = 170;
+            rectangle.y = 170;
+            app.stage.addChild(rectangle);
+
+
+            /////////////////////文字////////////////////
+            let style = new PIXI.TextStyle({
+                fontFamily: "Arial",
+                fontSize: 36,
+                fill: "white",
+                stroke: '#ff3300',
+                strokeThickness: 4,
+                dropShadow: true,
+                dropShadowColor: "#000000",
+                dropShadowBlur: 4,
+                dropShadowAngle: Math.PI / 6,
+                dropShadowDistance: 6,
+            });
+            let message = new PIXI.Text("Hello Pixi!", style);
+            app.stage.addChild(message)
+        }
+
+
+    </script>
+</body>
+
+</html>

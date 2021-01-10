@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixi js</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/5.3.7/pixi.min.js"
+        integrity="sha512-k8E2ILMRTO1YBnA2dvTDfsZs7f07gazZDQYbsv2NCxnM9hYFwCKu+rWISm8/fFB1I/gi0tgnURcXJVR7GlE0BA=="
+        crossorigin="anonymous"></script>
+    <style>
+        * {
+            padding: 0;
+            margin: 0
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <script type="text/javascript">
+        let type = "WebGL"//渲染引擎預設WebGL 
+        if (!PIXI.utils.isWebGLSupported()) {//isWebGLSupported用於檢查WebGL支持的幫助程序
+            type = "canvas"//但不識所有瀏覽器都支援WebGL，如果不支援WebGL，就變成canvas
+        }
+
+        PIXI.utils.sayHello(type) //然後指定渲染引擎type=WebGL or canvas
+        //utils實用程序
+
+        let app = new PIXI.Application({//創建顯示區
+            width: 800,
+            height: 800,
+            antialias: true,    // 設置抗鋸齒
+            transparent: false, // 透明
+            resolution: 1,      // 解析度
+
+        });
+        document.body.appendChild(app.view);//app顯示在body中
+
+
+
+        app.renderer.view.style.position = "absolute";
+        app.renderer.view.style.display = "block";
+        app.renderer.autoResize = true;
+        app.renderer.resize(window.innerWidth, window.innerHeight);
+        //以上四行canvas占据整个窗口，要记得把css padding和margin都设置成0：
+
+
+
+        PIXI.loader
+            .add(["fish.png"]) //載入圖片
+
+            .load(loadover); //執行loadover function
+
+
+
+        function loadover() {
+            //變數取代
+            // let id = PIXI.loader.resources;
+            // let fish = new PIXI.Sprite(id["fish.png"].texture);
+
+
+            let fish = new PIXI.Sprite(PIXI.loader.resources["fish.png"].texture);//創建fish變數接 loader的resources對象
+            app.stage.addChild(fish);//把圖片放置舞台(stage)
+            fish.position.set(50, 50) //設定位置
+
+            // fish.scale.x = 0.05;
+            // fish.scale.y = 0.05;
+            //等比縮小1
+
+            fish.scale.set(0.05, 0.05);
+            //等比縮小2
+
+            fish.anchor.set(0.5, 0.5)
+            //改錨點
+            fish.rotation = 0.5;
+            //選轉
+
+            window.addEventListener("click", () => {//監聽畫面window
+                // app.stage.removeChild(fish);
+                //消失方法1(刪除)
+                fish.visible = false;
+                //消失方法1(隱藏)
+            })
+        }
+
+
+
+    </script>
+</body>
+
+</html>
